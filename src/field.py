@@ -1,57 +1,46 @@
-from .operators import Operators
-from typing import TypeVar,Generic
+from .base import BaseSQL
+from typing import Any,TypeVar,Generic
 
 T = TypeVar('T')
 
-class Field(Generic[T],Operators):
-    
+DATATYPES:dict[str,str] = {
+    'int':'INTEGER',
+    'float':'REAL',
+    'str':'TEXT',
+    'bytes':'BLOB',
+}
+
+class Field(BaseSQL,Generic[T]):
+
+    __field_info__:dict[str,Any]
+
     def __init__(
         self,
-        default=None,
-        default_factory=None,
-        optional=False,
-        init=True,
-        repr=True,
-        hash=None,
-        compare=True,
-        metadata=dict(),
-        kw_only=False,
-        primary_key:bool = False,
-        required:bool = False,
-        unique:bool = False,
-        name:str=''
+        value:T,
+        primary_key:bool=False,
+        required:bool=False,
+        unique:bool=False
     ) -> None:
-        if default:
-            self.__value__ = default
+        self.__values__:T = value
+        self.__type__:type = type(value)
 
-        self.__repr = repr
-        self.__name__ = name
-        self.__primary_key__ = primary_key
-        self.__required__ = required
-        self.__unique__ = unique
-        self.__type__ = type(default)
-        self.__query__ = self.__constraint__()
-
-    def __repr__(self) -> str:
-        if self.__repr:
-            return super().__repr__()
-        else:
-            return ''
+        self.__sql_primary_key:str = "PRIMARY KEY" if primary_key else ""
+        self.__sql_required:str = "NOT NULL" if required else ""
+        self.__sql_unique:str = "UNIQUE" if unique else ""
+        self.__sql_constraints__:list[str] = []
         
-    def __constraint__(self) -> str:
-        """
-        Return constraints field as a string.
+        for constraint in [self.__sql_primary_key,self.__sql_required,self.__sql_unique]:
+            if constraint:
+                self.__sql_constraints__.append(constraint)
 
-        Returns:
-            str: The constraints field as a string.
-        """
-        constraints = []
+        self.__sql__:str = f"{self.__name__} {DATATYPES[self.__type__.__name__]} {' '.join(self.__sql_constraints__)}".strip()
 
-        if self.__primary_key__:
-            constraints.append("PRIMARY KEY")
-        if self.__required__:
-            constraints.append("NOT NULL")
-        if self.__unique__:
-            constraints.append("UNIQUE")
-
-        return " ".join(constraints)
+    def set(self,values:T):
+        self.__values__:T = values
+        return self
+    
+    def get(self) -> T:
+        return self.__values__
+        
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}({self.__name__}={self.__values__})"
