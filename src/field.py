@@ -1,5 +1,7 @@
-from .base import BaseSQL
-from typing import Any,TypeVar,Generic
+from .operators import (
+    SQLOperators
+)
+from typing import Any,TypeVar,Generic,Self
 
 T = TypeVar('T')
 
@@ -10,7 +12,7 @@ DATATYPES:dict[str,str] = {
     'bytes':'BLOB',
 }
 
-class Field(BaseSQL,Generic[T]):
+class Field(SQLOperators,Generic[T]):
 
     __field_info__:dict[str,Any]
 
@@ -24,18 +26,18 @@ class Field(BaseSQL,Generic[T]):
         self.__values__:T = value
         self.__type__:type = type(value)
 
-        self.__sql_primary_key:str = "PRIMARY KEY" if primary_key else ""
-        self.__sql_required:str = "NOT NULL" if required else ""
-        self.__sql_unique:str = "UNIQUE" if unique else ""
+        self.__sql_primary_key__:str = "PRIMARY KEY" if primary_key else ""
+        self.__sql_required__:str = "NOT NULL" if required else ""
+        self.__sql_unique__:str = "UNIQUE" if unique else ""
         self.__sql_constraints__:list[str] = []
         
-        for constraint in [self.__sql_primary_key,self.__sql_required,self.__sql_unique]:
+        for constraint in [self.__sql_primary_key__,self.__sql_required__,self.__sql_unique__]:
             if constraint:
                 self.__sql_constraints__.append(constraint)
 
         self.__sql__:str = f"{self.__name__} {DATATYPES[self.__type__.__name__]} {' '.join(self.__sql_constraints__)}".strip()
 
-    def set(self,values:T):
+    def set(self,values:T) -> Self:
         self.__values__:T = values
         return self
     

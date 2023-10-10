@@ -1,6 +1,9 @@
-class BaseSQL():
-    __values__ = None
-    __sql__:str
+from typing import (
+    Any,
+)
+class BaseSQL:
+    __values__ = Any
+    __sql__:str = ""
     __query__:str | list[str] = ""
     __name__:str = ""
 
